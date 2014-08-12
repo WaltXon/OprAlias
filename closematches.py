@@ -11,6 +11,7 @@ import Levenshtein as lev
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import collections
+import string
 
 PICKLE_FILE = 'operators2.p'
 
@@ -18,15 +19,22 @@ operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
 print(operators[:10])
 
-#need to lowercase the list
-operators_lowercase = []
+#need to normalize
+def normalize(s):
+    for p in string.punctuation:
+        s = s.replace(p, '')
+    return s.lower().strip()
+
+
+operators_normal = []
 for opr in operators:
     if opr != None:
-        operators_lowercase.append(opr.lower())
     
-print(operators_lowercase[:20])
+        operators_normal.append(normalize(opr))
+    
+print(operators_normal[:20])
 
-opr_count = collections.Counter(operators_lowercase)
+opr_count = collections.Counter(operators_normal)
 
 for opr, count in opr_count.most_common(10):
     print('{0} {1}'.format(opr, count))
