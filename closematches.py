@@ -19,12 +19,17 @@ operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
 print(operators[:10])
 
-#need to normalize
+#need to normalize for counts but aslo need to keep
+#the original so that I can match back to it later?
+
+#maybe I can clean up a list and then do fuzzy mathcing
+#when adding the alias back to the gdb file? 
+#
+
 def normalize(s):
     for p in string.punctuation:
         s = s.replace(p, '')
     return s.lower().strip()
-
 
 operators_normal = []
 for opr in operators:
