@@ -12,9 +12,10 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import collections
 import string
+import pprint
 
 PICKLE_FILE = 'operators2.p'
-RATIO_CUTOFF = 70
+RATIO_CUTOFF = 90
 
 operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
@@ -48,38 +49,55 @@ for opr, count in opr_count.most_common(10):
     
 
 
-i=0
-alias_dict = {}
 
 opr_set = set(operators_normal)
+opr_sort_set = sorted(opr_set)
 
-for opr_name in opr_set:
-    #print('* {0}'.format(opr_name))
-    opr_most_common = ''
-    opr_similar = []    
-    if i == 0:
-        prev_name = opr_name
-        opr_most_common = opr_name
-        i += 1
-        continue
-    else:
-        #print('--PREV = {0}, OPR = {1}, FUZZ RATIO = {2}'.format(prev_name, opr_name, fuzz.ratio(opr_name, prev_name)))
-        if fuzz.ratio(opr_name, prev_name) >= RATIO_CUTOFF:        
-            if opr_count[opr_name] > opr_count[opr_most_common]:
-                print('---OPR_CT = {0}, MOST_COMMON = {1}'.format(opr_count[opr_name], opr_count[opr_most_common]))
-                opr_similar.append(prev_name)                    
-                opr_most_common = opr_name
-                
-            else:
-                opr_similar.append(prev_name)
-        else:
-            alias_dict.setdefault(opr_most_common, opr_similar)  
+#pp = pprint.PrettyPrinter()
+#pp.pprint(opr_sort_set)
+
+i= 'INIT'
+alias_dict = {}
+alias_dict['DEFAULT'] = 0
+#for opr_name in opr_sort_set:
+#    #print('* {0}'.format(opr_name))
+#    if i == 'INIT':
+#        #ON THE FIRST ITERATION SETUP VARIABLES
+#        prev_name = opr_name
+#        opr_most_common = 'DEFAULT'
+#        opr_similar = []
+#        
+#    if fuzz.ratio(prev_name, opr_name) >= RATIO_CUTOFF:   
+#        #IF THE PREV_NAME AND OPR_NAME ARE SIMILAR AND SHOULD BE GROUPED
+#        opr_similar.append(prev_name)
+#        
+#        if opr_count[opr_name] > opr_count[opr_most_common]:
+#            #IF THE CURRENT OPR_NAME HAS MORE COUNTS THAN THE OPR_MOST_COMMON                
+#            #OPR_MOST_COMMON SOULD IS SET TO CURRENT VALUE OF OPR_NAME                 
+#            opr_most_common = opr_name
+#            
+#        prev_name = opr_name
+#    else:
+#        opr_most_common = prev_name
+#        alias_dict.setdefault(opr_most_common, opr_similar)
+#        opr_most_common = 'DEFAULT'
+#        opr_similar = []
+
+similar = []
+groups = {}
+
+
+for name in opr_sort_set:
+    for name2 in opr_sort_set:
+        if fuzz.ratio(name, name2) >= RATIO_CUTOFF and name != name2:
+            similar.append((name2, fuzz.ratio(name, name2)))
+    groups.setdefault(name, similar)
+    similar = []
         
-        #print('--! prev_name = {0}, opr_name = {1}, most_common = {2}, opr_similar = {3}'.format(prev_name, opr_name, opr_most_common, opr_similar))
-    prev_name = opr_name
         
-        
-print(alias_dict)
+alias_dict.pop('DEFAULT')
+pp = pprint.PrettyPrinter()
+pp.pprint(groups)
     
     
 
