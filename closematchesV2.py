@@ -14,13 +14,13 @@ import collections
 import string
 
 PICKLE_FILE = 'operators2.p'
-RATIO_CUTOFF = 0.60
+RATIO_CUTOFF = 70
 
 operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
 operators_deque = collections.deque(operators[:100])
 
-operator_test  = operators[:100]
+operator_test  = operators[:2000]
 #need to normalize for counts but aslo need to keep
 #the original so that I can match back to it later?
 
@@ -39,7 +39,7 @@ for opr in operator_test:
     
         operators_normal.append(normalize(opr))
     
-print(operators_normal[:20])
+#print(operators_normal[:20])
 
 opr_count = collections.Counter(operators_normal)
 
@@ -47,12 +47,14 @@ for opr, count in opr_count.most_common(10):
     print('{0} {1}'.format(opr, count))
     
 
-operators_normal.sort()
+
 i=0
 alias_dict = {}
 
-for opr_name in operators_normal:
-    print('* {0}'.format(opr_name))
+opr_set = set(operators_normal)
+
+for opr_name in opr_set:
+    #print('* {0}'.format(opr_name))
     opr_most_common = ''
     opr_similar = []    
     if i == 0:
@@ -61,15 +63,19 @@ for opr_name in operators_normal:
         i += 1
         continue
     else:
-        if opr_name == prev_name:
-            continue
+        #print('--PREV = {0}, OPR = {1}, FUZZ RATIO = {2}'.format(prev_name, opr_name, fuzz.ratio(opr_name, prev_name)))
+        if fuzz.ratio(opr_name, prev_name) >= RATIO_CUTOFF:        
+            if opr_count[opr_name] > opr_count[opr_most_common]:
+                print('---OPR_CT = {0}, MOST_COMMON = {1}'.format(opr_count[opr_name], opr_count[opr_most_common]))
+                opr_similar.append(prev_name)                    
+                opr_most_common = opr_name
+                
+            else:
+                opr_similar.append(prev_name)
         else:
-            if fuzz.ratio(opr_name, prev_name) >= RATIO_CUTOFF: 
-                if opr_count[opr_name] > opr_count[opr_most_common]:
-                    opr_most_common = opr_name
-                else:
-                    opr_similar.extend(opr_name)
-            alias_dict.setdefault(opr_most_common, opr_similar)
+            alias_dict.setdefault(opr_most_common, opr_similar)  
+        
+        #print('--! prev_name = {0}, opr_name = {1}, most_common = {2}, opr_similar = {3}'.format(prev_name, opr_name, opr_most_common, opr_similar))
     prev_name = opr_name
         
         
