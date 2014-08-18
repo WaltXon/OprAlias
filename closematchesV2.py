@@ -15,7 +15,7 @@ import string
 import pprint
 
 PICKLE_FILE = 'operators2.p'
-RATIO_CUTOFF = 90
+RATIO_CUTOFF = 87
 
 operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
@@ -37,8 +37,14 @@ def normalize(s):
 operators_normal = []
 for opr in operator_test:
     if opr != None:
-    
-        operators_normal.append(normalize(opr))
+        normalized = normalize(opr)
+        trunc = normalized.split(' ')
+        if len(trunc) >= 3:
+            take3 = ' '.join(trunc[0:3])
+        else:
+            take3 = normalized
+            
+        operators_normal.append(take3)
     
 #print(operators_normal[:20])
 
@@ -56,48 +62,25 @@ opr_sort_set = sorted(opr_set)
 #pp = pprint.PrettyPrinter()
 #pp.pprint(opr_sort_set)
 
-i= 'INIT'
-alias_dict = {}
-alias_dict['DEFAULT'] = 0
-#for opr_name in opr_sort_set:
-#    #print('* {0}'.format(opr_name))
-#    if i == 'INIT':
-#        #ON THE FIRST ITERATION SETUP VARIABLES
-#        prev_name = opr_name
-#        opr_most_common = 'DEFAULT'
-#        opr_similar = []
-#        
-#    if fuzz.ratio(prev_name, opr_name) >= RATIO_CUTOFF:   
-#        #IF THE PREV_NAME AND OPR_NAME ARE SIMILAR AND SHOULD BE GROUPED
-#        opr_similar.append(prev_name)
-#        
-#        if opr_count[opr_name] > opr_count[opr_most_common]:
-#            #IF THE CURRENT OPR_NAME HAS MORE COUNTS THAN THE OPR_MOST_COMMON                
-#            #OPR_MOST_COMMON SOULD IS SET TO CURRENT VALUE OF OPR_NAME                 
-#            opr_most_common = opr_name
-#            
-#        prev_name = opr_name
-#    else:
-#        opr_most_common = prev_name
-#        alias_dict.setdefault(opr_most_common, opr_similar)
-#        opr_most_common = 'DEFAULT'
-#        opr_similar = []
+
 
 similar = []
-groups = {}
-
+groups = []
+similar_tup = None
 
 for name in opr_sort_set:
     for name2 in opr_sort_set:
         if fuzz.ratio(name, name2) >= RATIO_CUTOFF and name != name2:
-            similar.append((name2, fuzz.ratio(name, name2)))
-    groups.setdefault(name, similar)
+            similar.append(name2)
+            similar_tup = tuple(similar)
+    groups.append(similar_tup)
     similar = []
-        
-        
-alias_dict.pop('DEFAULT')
+    similar_tup = None
+
+opr_group_set = set(groups)
+
 pp = pprint.PrettyPrinter()
-pp.pprint(groups)
+pp.pprint(opr_group_set)
     
     
 
