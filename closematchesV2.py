@@ -15,13 +15,13 @@ import string
 import pprint
 
 PICKLE_FILE = 'operators2.p'
-RATIO_CUTOFF = 87
+RATIO_CUTOFF = 90
 
 operators = pkle.load(open(PICKLE_FILE, 'rb'))
 
 operators_deque = collections.deque(operators[:100])
 
-operator_test  = operators[:2000]
+operator_test  = operators[:4000]
 #need to normalize for counts but aslo need to keep
 #the original so that I can match back to it later?
 
@@ -30,60 +30,79 @@ operator_test  = operators[:2000]
 #
 
 def normalize(s):
+    remove = ('incorporated', 'corporation', 'corp', 'inc', 'company', 'co', 'limited', 'partnership', 'partner',
+          'llc', 'ltd','llp', 'lp', 'l l c','l p', 'et al', 'et ux')
     for p in string.punctuation:
         s = s.replace(p, '')
-    return s.lower().strip()
+    s = s.lower()
+    for item in remove:
+        s = s.replace(item, '')
+    return s.strip() 
+
 
 operators_normal = []
 for opr in operator_test:
     if opr != None:
         normalized = normalize(opr)
-        trunc = normalized.split(' ')
-        if len(trunc) >= 3:
-            take3 = ' '.join(trunc[0:3])
-        else:
-            take3 = normalized
-            
-        operators_normal.append(take3)
+        operators_normal.append(normalized)
     
 #print(operators_normal[:20])
 
 opr_count = collections.Counter(operators_normal)
 
-for opr, count in opr_count.most_common(10):
-    print('{0} {1}'.format(opr, count))
-    
-
-
+#for opr, count in opr_count.most_common(10):
+#    print('{0} {1}'.format(opr, count))
+#    
 
 opr_set = set(operators_normal)
 opr_sort_set = sorted(opr_set)
 
-#pp = pprint.PrettyPrinter()
-#pp.pprint(opr_sort_set)
 
-
-
-similar = []
+name_group = []
 groups = []
-similar_tup = None
+
 
 for name in opr_sort_set:
+    name_group.append(name)
     for name2 in opr_sort_set:
-        if fuzz.ratio(name, name2) >= RATIO_CUTOFF and name != name2:
-            similar.append(name2)
-            similar_tup = tuple(similar)
-    groups.append(similar_tup)
-    similar = []
-    similar_tup = None
+        if fuzz.partial_ratio(name, name2) >= RATIO_CUTOFF and name != name2:
+            name_group.append(name2)
+    
+    name_set = tuple(name_group)
+    groups.append(name_set)
+    name_group = []
 
-opr_group_set = set(groups)
 
+sorted_groups = []
+for sub_group in groups:
+    sorted_groups.append(tuple(sorted(sub_group)))
+
+
+opr_group_set = set(sorted_groups)
+
+
+opr_count['LOW'] = 0
+opr_lookup = {}
+
+for opr_group in opr_group_set:
+    most_common_opr = 'LOW'
+    for opr_name in opr_group:
+        if opr_count[opr_name] > opr_count[most_common_opr]:
+            most_common_opr = opr_name
+    opr_lookup.setdefault(most_common_opr, opr_group)
+            
 pp = pprint.PrettyPrinter()
-pp.pprint(opr_group_set)
-    
-    
+pp.pprint(opr_lookup)
 
+##USE THE REVERSE LOOKUP FOR ADDING ALIAS THROUGH ARCPY
+opr_lookup_reverse = {}
+for key, values in opr_lookup.iteritems():
+    for val in values: 
+        opr_lookup_reverse.setdefault(val, key)
+        
+#pp.pprint(opr_lookup_reverse)
+        
+        
 #using difflib
 #difflib.get_close_matches(operator, operators)
 #difflib.SequenceMather().ratio() --Not reallly 
