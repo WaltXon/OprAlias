@@ -5,14 +5,14 @@ Created on Tue Aug 12 13:12:38 2014
 @author: wnixon
 """
 
-import cPickle as pkle
-import difflib
-import Levenshtein as lev
+#import cPickle as pkle
+#import difflib
+#import Levenshtein as lev
 from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+#from fuzzywuzzy import process
 import collections
 import string
-import pprint
+#import pprint
 
 #need to normalize for counts but aslo need to keep
 #the original so that I can match back to it later?
@@ -24,19 +24,21 @@ import pprint
 def normalize(s):
     remove = ('incorporated', 'corporation', 'corp', 'inc', 'company', 'co', 'limited', 'partnership', 'partner',
           'llc', 'ltd','llp', 'lp', 'l l c','l p', 'et al', 'et ux')
-    for p in string.punctuation:
-        s = s.replace(p, '')
-    s = s.lower()
-    for item in remove:
-        s = s.replace(item, '')
-    return s.strip() 
+    if s != None:      
+        for p in string.punctuation:
+            s = s.replace(p, '')
+        s = s.lower()
+        for item in remove:
+            s = s.replace(item, '')
+        return s.strip()
+    else: return 'None'
 
 def opr_alias(opr_list):
+    RATIO_CUTOFF = 90  
     operators_normal = []
     for opr in opr_list:
-        if opr != None:
-            normalized = normalize(opr)
-            operators_normal.append(normalized)
+        normalized = normalize(opr)
+        operators_normal.append(normalized)
    
    #print(operators_normal[:20])
 
